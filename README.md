@@ -1,4 +1,4 @@
-# rename-photos-code
+# renamephotos
 code to rename all photos in a given folder.
 
 <p align="left">
