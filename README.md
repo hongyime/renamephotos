@@ -1,4 +1,8 @@
 # renamephotos
+
+
+![Project screenshot](./screenshot.png)
+
 code to rename all photos in a given folder.
 
 <p align="left">
