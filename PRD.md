@@ -1,66 +1,45 @@
 # PRD: renamephotos
 
 ## Overview
-A Python CLI script that renames all photos in a specified folder to random 20-character alphanumeric filenames while preserving the original extension. Useful for anonymizing photo collections before sharing or for breaking sequential filenames from camera exports.
+
+A standard-library Python CLI that renames photos within a selected folder to
+random 20-character names. Names contain distinct lowercase letters/digits and
+retain the source extension. Renaming changes filenames, not image contents or
+embedded metadata.
 
 ## Goals
-- Accept a folder path as user input
-- Rename all `.jpg`, `.jpeg`, `.png`, `.JPG` files to random 20-char names
-- Preserve file extensions
-- Print old and new filename for each rename
 
-## Non-Goals
-- Recursive subdirectory processing
-- Undo/rollback functionality
-- Support for video files (`.mov`, `.mp4`, `.mp3` — commented out)
-- Duplicate detection or collision handling
-- GUI
+- Accept a folder argument or prompt, and show the complete proposed mapping.
+- Support JPG, JPEG and PNG extensions with any capitalization.
+- Select regular files only; skip symlinks and directories without recursion.
+- Reserve names case-insensitively and bound collision retries.
+- Require confirmation or `--yes`; provide a read-only `--dry-run`.
+- Refuse existing destinations atomically at execution time.
+- Flush the complete original/new mapping before the first rename.
+- Stop on errors or interruption with a nonzero status and recoverable mappings.
+- Keep imports free of interactive prompts and renaming.
 
-## User Stories
-- As a photographer, I want to strip sequential camera filenames (DSC_0001.jpg) before sharing a folder.
-- As a developer, I want to anonymize a test dataset of images with unpredictable names.
+## Non-goals
 
-## Tech Stack
-- **Language**: Python 3.x
-- **Libraries**: `os`, `random`, `string` (all stdlib)
+Image conversion, content-based duplicate detection, metadata removal, cloud
+storage, recursive processing, a GUI and automatic undo/rollback are outside
+this utility. A batch is not an all-or-nothing transaction.
 
-## Architecture
-```
-renamephotos/
-└── renameall.py    # single-file script
-```
+## Execution
 
-**Logic:**
-1. Prompt user for folder path
-2. `os.listdir(folder)` to get all files
-3. For each file with supported extension:
-   - Generate 20-char random name from `[a-z0-9]`
-   - `os.rename(src, dst)`
-   - Print `renamed X to Y`
-4. Print "All done"
+`build_plan` scans and reserves names without writing. `execute_plan` rechecks
+the whole plan and source identities, creates an exclusive JSONL mapping, then
+performs native no-replace renames and records their results. Unsupported native
+operations fail without an unsafe fallback. `main` owns arguments, preview,
+confirmation, success/error output and exit status.
 
-## Features (detailed)
+The tool supports Python 3.10+ on Windows, Linux and macOS. Linux filesystems
+must support `RENAME_NOREPLACE`; macOS uses `RENAME_EXCL`. Contents are never
+copied, decoded or rewritten by the utility. Other applications should not
+replace or edit files during a batch. The mapping supports manual recovery;
+it is not a content backup or a filesystem crash-recovery guarantee.
 
-### Random Name Generation
-- Uses `random.sample(ascii_lowercase + digits, 20)` — samples without replacement
-- Guarantees 20 unique characters from 36-char pool
-- Preserves original extension (`.jpg`, `.jpeg`, `.png`, `.JPG`)
+## Validation
 
-### Supported Extensions
-- `.jpg`, `.jpeg`, `.png`, `.JPG`
-- Skips all other files (including `.mov`, `.mp4` — commented out but easily re-enabled)
-
-## Data / Config
-No config file. Single input: folder path entered at runtime.
-
-## Deployment / Run
-```bash
-python renameall.py
-# Enter folder path when prompted
-```
-
-## Constraints & Notes
-- **No collision check**: `random.sample` without replacement gives 20 unique chars but doesn't check if the generated name already exists in the folder — extremely unlikely collision but not impossible at scale
-- **Irreversible**: no backup or undo; original names are gone after rename
-- **Non-recursive**: only processes files directly in the specified folder, not subdirectories
-- **Case-sensitive extension**: `.JPG` handled separately from `.jpg`; `.JPEG` or `.PNG` are not handled
+Use `python -m unittest discover -s tests -v`. Hosted checks exercise real native
+rename behavior on all three supported operating systems with synthetic files.
