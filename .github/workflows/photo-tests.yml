@@ -1,0 +1,33 @@
+name: Photo Rename Tests
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ["renameall.py", "tests/**", ".github/workflows/photo-tests.yml"]
+  push:
+    branches: [main]
+    paths: ["renameall.py", "tests/**", ".github/workflows/photo-tests.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: photo-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Rename tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+      - name: Test synthetic photo renames
+        run: python -m unittest discover -s tests -v

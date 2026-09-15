@@ -1,33 +1,62 @@
 # renamephotos
 
+Rename photos directly inside a folder to random 20-character alphanumeric
+filenames. JPG, JPEG and PNG extensions are matched case-insensitively, and each
+file keeps its original extension spelling. Image contents and embedded metadata
+are unchanged. Directories, symlinks and other file types are skipped.
 
-![Project screenshot](./screenshot.png)
+## Run
 
-code to rename all photos in a given folder.
+Use Python 3.10 or newer on Windows, Linux or macOS. No third-party packages are
+needed. Double-click `renameall.py`, or run:
 
-<p align="left">
-  <img src="https://winaero.com/blog/wp-content/uploads/2018/12/file-explorer-folder-libraries-icon-18298.png" width='300' height='300' />
-</p>
+```bash
+python renameall.py
+python renameall.py "/path/to/photos" --dry-run
+python renameall.py "/path/to/photos" --yes
+```
 
-## Disclaimer:
-1. NONE
+Without `--yes`, the program shows the proposed names and asks before applying
+them. The default answer is no. `--dry-run` only previews: it does not rename
+files or create a mapping journal. Importing the module never prompts or renames.
 
-## Instructions:
-1. Download the repo as a zip file
-2. Unzip the file
-3. Double click the python file to run the programme
+## Preserving files and names
 
-## Project Status
+The entire plan is checked before execution. Existing names, including names
+that differ only in case, are reserved while new names are generated. Each move
+uses a native operation that refuses to replace an existing destination, even
+if it appears after the initial check. Unsupported platforms or filesystems
+stop with an error; there is no overwriting fallback.
 
-renamephotos project pending fuller documentation and setup notes. This pass standardises repository hygiene without inventing live deployment details or showcase assets.
+Before the first rename, the program creates and flushes a private
+`.renamephotos-<id>.jsonl` mapping in the photo folder. Its first line contains
+all original and proposed names. Later lines record completed moves and normal
+completion. Keep this file if you need the original names.
 
-## Setup
+A batch stops at its first failure or interruption. Earlier successful renames
+remain in place; remaining sources retain their names. An interruption may occur
+between a move and its result record, so inspect both names using the complete
+first-line mapping before recovery. There is no automatic rollback or undo.
+Keep other applications from editing or replacing files in the folder while the
+batch runs. The journal is not a backup of image contents or a guarantee against
+filesystem or power-loss corruption.
 
-Install dependencies for the detected stack and run the existing entry point. Keep secrets in ignored environment files.
+Atomic non-replacement uses Windows `os.rename`, Linux `renameat2` with
+`RENAME_NOREPLACE`, or macOS `renamex_np` with `RENAME_EXCL`. See the
+[Python rename documentation](https://docs.python.org/3/library/os.html#os.rename),
+[Linux rename documentation](https://man7.org/linux/man-pages/man2/rename.2.html),
+and [Apple interface definitions](https://github.com/apple-oss-distributions/xnu/blob/main/bsd/sys/stdio.h).
 
-## Usage
+## Tests
 
-Review the source tree for current commands. Add exact deployment and demo details once the showcase URL is confirmed.
+```bash
+python -m unittest discover -s tests -v
+```
+
+CI runs temporary-file tests on Windows, Linux and macOS. Tests cover import
+behavior, previews, file selection, collisions, native non-replacement,
+changed sources, partial execution and recovery mappings. They do not open or
+rename an existing photo collection.
 
 ## License
 
