@@ -1,5 +1,8 @@
 # renamephotos
 
+**Live:** https://hongyime.github.io/renamephotos/
+
+![screenshot](./screenshot.png)
 Rename photos directly inside a folder to random 20-character alphanumeric
 filenames. JPG, JPEG and PNG extensions are matched case-insensitively, and each
 file keeps its original extension spelling. Image contents and embedded metadata
