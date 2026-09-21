@@ -5,6 +5,12 @@
 
 
 
+
+# Python runtime files and private local rename mappings
+__pycache__/
+*.py[cod]
+.renamephotos-*.jsonl
+
 # AI / editor dot directories (managed via sourcerepo)
 .*
 !.github/
@@ -40,8 +46,3 @@ skills/
 skills-lock.json
 docs/
 # End AI / editor dot directories (managed via sourcerepo)
-
-# Python runtime files and private local rename mappings
-__pycache__/
-*.py[cod]
-.renamephotos-*.jsonl
